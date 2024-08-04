@@ -1,0 +1,151 @@
+import tkinter as tk
+from tkinter import ttk
+import openpyxl
+from openpyxl import Workbook
+
+def calculate_total():
+    total = sum(int(option_to_value[entry.get()]) for entry in dropdowns)
+    total_label.config(text=f"Total FSSG Score: {total}")
+
+def determine_gerd():
+    fssg_score = sum(int(option_to_value[entry.get()]) for entry in dropdowns)
+
+    if fssg_score >= 0 and fssg_score <= 7:
+        result = "No GERD"
+    elif fssg_score == 8:
+        result = "GERD"
+    elif 9 <= fssg_score <= 18:
+        result = "GERD1"
+    elif 19 <= fssg_score <= 28:
+        result = "GERD2"
+    elif 29 <= fssg_score <= 38:
+        result = "GERD3"
+    elif 39 <= fssg_score <= 48:
+        result = "GERD4"
+    else:
+        result = "Invalid FSSG score"
+
+    result_label.config(text=f"The patient's GERD level is: {result}")
+
+def save_responses():
+    responses = [dropdown.get() for dropdown in dropdowns]
+    fssg_score = sum(int(option_to_value[entry.get()]) for entry in dropdowns)
+
+    if fssg_score >= 0 and fssg_score <= 7:
+        result = "No GERD"
+    elif fssg_score == 8:
+        result = "GERD"
+    elif 9 <= fssg_score <= 18:
+        result = "GERD1"
+    elif 19 <= fssg_score <= 28:
+        result = "GERD2"
+    elif 29 <= fssg_score <= 38:
+        result = "GERD3"
+    elif 39 <= fssg_score <= 48:
+        result = "GERD4"
+    else:
+        result = "Invalid FSSG score"
+
+    responses.append(fssg_score)
+    responses.append(result)
+    sheet.append(responses)
+    workbook.save('data_save.xlsx')
+    result_label.config(text="Responses saved to data_save.xlsx")
+
+def exit_application():
+    root.destroy()
+
+file_path = 'data_save.xlsx'
+
+# Create a new workbook if the file doesn't exist
+try:
+    workbook = openpyxl.load_workbook(file_path)
+except FileNotFoundError:
+    workbook = Workbook()
+    workbook.save(file_path)
+
+root = tk.Tk()
+root.title("FSSG Score and GERD Diagnosis Tool")
+root.configure(bg="#4287f5")
+
+workbook = openpyxl.load_workbook(file_path)
+sheet = workbook.active
+
+option_to_value = {
+    "Never": 0,
+    "Occasionally": 1,
+    "Sometimes": 2,
+    "Often": 3,
+    "Always": 4
+}
+
+labels = [
+    tk.Label(root, text=f"Q{i + 1} {question}", font=("Arial", 15), fg="red", highlightbackground="red",
+             highlightthickness=2)
+    for i, question in enumerate([
+        "Do you get heartburn?",
+        "Does your stomach get bloated?",
+        "Does your stomach ever feel heavy after meals?",
+        "Do you sometimes subconsciously rub your chest with your hand?",
+        "Do you ever feel sick after meals?",
+        "Do you get heartburn after meals?",
+        "Do you have an unusual (eg, burning) sensation in your throat?",
+        "Do you feel full while eating meals?",
+        "Do some things get stuck when you swallow?",
+        "Do you get bitter liquid (acid) coming up into your throat?",
+        "Do you burp a lot?",
+        "Do you get heartburn if you bend over?"
+    ])
+]
+dropdowns = [
+    ttk.Combobox(root, values=list(option_to_value.keys()), state="readonly", font=("Arial", 15))
+    for _ in range(12)
+]
+
+# Add labels and dropdown menus to the main window
+for i in range(12):
+    labels[i].grid(row=i + 1, column=0, columnspan=1, sticky="w", padx=10, pady=5)
+    dropdowns[i].grid(row=i + 1, column=1, columnspan=1, padx=10, pady=5)
+
+# Create the "Calculate FSSG Score" button
+button_calculate_total = tk.Button(root, text="Calculate FSSG Score", font=("Arial", 12, "bold"), command=calculate_total)
+button_calculate_total.grid(row=13, column=1, columnspan=1, pady=15)
+
+# Create a label to display the total FSSG score
+total_label = tk.Label(root, text="SCORE: 0", font=("Arial", 14, "bold"))
+total_label.grid(row=14, column=1, columnspan=1)
+
+# Create a button to determine GERD level and display the result
+button_determine_gerd = tk.Button(root, text="Determine GERD Level", font=("Arial", 12, "bold"), command=determine_gerd)
+button_determine_gerd.grid(row=6, column=2, columnspan=1, pady=20)
+
+# Create a label to display the GERD diagnosis result
+result_label = tk.Label(root, text="", font=("Arial", 12))
+result_label.grid(row=7, column=2, columnspan=1, pady=10)
+
+# Create an exit button
+button_exit = tk.Button(root, text="Exit", font=("Arial", 12, "bold"), command=exit_application)
+button_exit.grid(row=14, column=2, columnspan=1, pady=20)
+
+# Create a button to clear and reset selections
+button_clear = tk.Button(root, text="Clear and Reset", font=("Arial", 12, "bold"),
+                         command=lambda: clear_and_reset())
+button_clear.grid(row=8, column=4, columnspan=2, pady=15)
+
+# Create a button to save responses to Excel
+button_save = tk.Button(root, text="Save Responses", font=("Arial", 12, "bold"),
+                        command=save_responses)
+button_save.grid(row=6, column=3, columnspan=2, pady=15)
+
+def clear_and_reset():
+    for entry in dropdowns:
+        entry.set("")  # Clear selections
+    total_label.config(text="SCORE: 0")
+    result_label.config(text="")
+
+# Developer information label
+developer_label = tk.Label(root, text="Developed by KRISHNA SAHA , M.SC IT (DATA SCIENCE) from MAKAUT.WB",
+                           font=("Arial", 10))
+developer_label.grid(row=20, column=0, columnspan=2, pady=5)
+
+root.mainloop()
